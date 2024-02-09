@@ -1,6 +1,7 @@
 import numpy as np
 import picar_4wd as fc
 import mapping
+import time
 
 def heuristic(a, b):
     #Calculate the heuristic value between two points (Manhattan Dis)
@@ -14,6 +15,12 @@ def back_tracking(end_node, path_mapping):
         path.append(current)
         current = path_mapping[current]
     return path[::-1]
+
+def detect_stop_sign():
+    #TODO: Need to add code on how to recognize stop sign or other trafic signs
+        ## Return True if found a stop sign
+    pass
+    #return True
 
 def path_convert(path, start, initial_dir):
     neighborMap = {
@@ -106,6 +113,12 @@ def main(env, start=(0, 0), goal=(150, 100), initial_dirction=0, turn_speed=30, 
         if order > 0:
             for i in range(order):
                 fc.turn_right(turn_speed)
+        
+        ##TODO: implement stop sign functions
+        if detect_stop_sign():
+            fc.stop()
+            time.sleep(0.2)
+
         fc.forward(move_speed) 
 
 if __name__ == '__main__':
