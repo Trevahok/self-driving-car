@@ -47,7 +47,21 @@ def path_convert(path, start, initial_dir):
         orders.append(required_dir_change)
     return orders
 
+def env_enhancement(env):
+    env_copy = np.copy(env)
+    for x in range(len(env)):
+        for y in range(len(env[0])):
+            down = max(x - 1, 0)
+            left = max(y - 1, 0)
+            right = min(y + 1, len(env[0])-1)
+            up = min(x + 1, len(env)-1)
+            surrounding = env[down:up, left:right]
+            env_copy[x][y] = np.max(surrounding)
+    return env_copy
+
 def a_star_search(env, start, end):
+
+    env = env_enhancement(env)
 
     if env[end[0]][end[1]] == 1 or env[start[0]][start[1]] == 1:
         raise ValueError("obstacle in start/end position, a*search not running")
