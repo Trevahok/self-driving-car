@@ -2,6 +2,8 @@ import numpy as np
 import picar_4wd as fc
 import mapping
 import time
+import matplotlib.pyplot as plt
+import my_obstacle_avoidance
 
 def heuristic(a, b):
     #Calculate the heuristic value between two points (Manhattan Dis)
@@ -24,8 +26,8 @@ def detect_stop_sign():
 
 def path_convert(path, start, initial_dir):
     neighborMap = {
-        (-1, 0): 0, #up
-        (1, 0): 2, #down
+        (1, 0): 0, #up
+        (-1, 0): 2, #down
         (0, -1): 3, #left
         (0, 1): 1 #right
     }
@@ -102,31 +104,44 @@ def a_star_search(env, start, end):
                     toVisit.append(neighbor)
     return False
 
-def main(env, start=(0, 0), goal=(150, 100), initial_dirction=0, turn_speed=30, move_speed=30):
+def main(env, start=(100, 100), goal=(175, 175), initial_dirction=0, turn_speed=100, move_speed=1):
     path = a_star_search(env, start, goal)
     if path == False:
         return False
     
     orders_path = path_convert(path, start, initial_dirction)
     
+    step = 0
     for order in orders_path:
+        step += 1
         if order > 0:
             for i in range(order):
+                print("TURNING", order)
                 fc.turn_right(turn_speed)
+                time.sleep(0.48)
+        
+        # my_obstacle_avoidance.avoid_collision()
+        print(step)
+        fc.forward(move_speed) 
+        time.sleep(0.05)
+        fc.stop()
         
         ##TODO: implement stop sign functions
-        if detect_stop_sign():
-            fc.stop()
-            time.sleep(0.2)
+        # if detect_stop_sign():
+        #     fc.stop()
+        #     time.sleep(0.2)
 
-        fc.forward(move_speed) 
 
 if __name__ == '__main__':
 
-    env = mapping.rudimentary_map()
+    env = mapping.rudimentary_map(10)
+    print(env)
+    # np.save('env.npy',env)
+    plt.imshow(env, cmap='hot', origin='lower')
+    plt.show()
 
     try:
-        main()
+        main(env)
     finally: 
         fc.stop()
 
