@@ -5,6 +5,25 @@ import time
 import matplotlib.pyplot as plt
 import my_obstacle_avoidance
 
+def turn_right():
+    fc.turn_right(40)
+    time.sleep(0.605)
+    fc.stop()
+
+def turn_left():
+    fc.turn_left(40)
+    time.sleep(0.605)
+    fc.stop()
+
+def move_forward():
+    fc.forward(2)
+    time.sleep(0.02)
+    fc.stop()
+
+    fc.forward(2)
+    time.sleep(0.02)
+    fc.stop()
+
 def heuristic(a, b):
     #Calculate the heuristic value between two points (Manhattan Dis)
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
@@ -51,17 +70,16 @@ def env_enhancement(env):
     env_copy = np.copy(env)
     for x in range(len(env)):
         for y in range(len(env[0])):
-            down = max(x - 1, 0)
-            left = max(y - 1, 0)
-            right = min(y + 1, len(env[0])-1)
-            up = min(x + 1, len(env)-1)
+            down = max(x - 8, 0)
+            left = max(y - 8, 0)
+            right = min(y + 8, len(env[0])-1)
+            up = min(x + 8, len(env)-1)
             surrounding = env[down:up, left:right]
             env_copy[x][y] = np.max(surrounding)
     return env_copy
 
 def a_star_search(env, start, end):
 
-    env = env_enhancement(env)
 
     if env[end[0]][end[1]] == 1 or env[start[0]][start[1]] == 1:
         raise ValueError("obstacle in start/end position, a*search not running")
@@ -118,8 +136,19 @@ def a_star_search(env, start, end):
                     toVisit.append(neighbor)
     return False
 
-def main(env, start=(100, 100), goal=(175, 175), initial_dirction=0, turn_speed=100, move_speed=1):
+def mark_path(path, env):
+    env_copy = np.copy(env)
+    for point in path:
+        env_copy[point[0]][point[1]] = -30
+    
+    plt.imshow(env_copy, cmap='hot', origin='lower')
+    plt.show()
+    return 
+        
+
+def main(env, start=(100, 100), goal=(100, 175), initial_dirction=1, turn_speed=100, move_speed=1):
     path = a_star_search(env, start, goal)
+    mark_path(path, env)
     if path == False:
         return False
     
@@ -127,18 +156,18 @@ def main(env, start=(100, 100), goal=(175, 175), initial_dirction=0, turn_speed=
     
     step = 0
     for order in orders_path:
-        step += 1
         if order > 0:
-            for i in range(order):
-                print("TURNING", order)
-                fc.turn_right(turn_speed)
-                time.sleep(0.48)
-        
+            if order == 3:
+                turn_left()
+            else:
+                for i in range(order):
+                    print("TURNING", order)
+                    turn_right()
+                
+        print(path[step])
+        step += 1
         # my_obstacle_avoidance.avoid_collision()
-        print(step)
-        fc.forward(move_speed) 
-        time.sleep(0.05)
-        fc.stop()
+        move_forward()
         
         ##TODO: implement stop sign functions
         # if detect_stop_sign():
@@ -148,9 +177,10 @@ def main(env, start=(100, 100), goal=(175, 175), initial_dirction=0, turn_speed=
 
 if __name__ == '__main__':
 
-    env = mapping.rudimentary_map(10)
+    env = mapping.rudimentary_map(1)
+    env = env_enhancement(env)
     print(env)
-    # np.save('env.npy',env)
+    np.save('env.npy',env)
     plt.imshow(env, cmap='hot', origin='lower')
     plt.show()
 

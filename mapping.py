@@ -65,13 +65,13 @@ def mapper():
     
     return env
 
-def rudimentary_map():
-    angle_step = 1
-    env = np.zeros((150, 150))
+def rudimentary_map(angle_step = 1):
+    env = np.zeros((200, 200))
     for i in range(-60, 61, angle_step):
-        tmp = get_distance_at_with_limit(i* angle_step, 99)
-        x = 49 +int(tmp * np.sin(np.radians(i*angle_step)))
-        y = int(tmp* np.cos(np.radians(i*angle_step)))
+        tmp = get_distance_at_with_limit(i, 150)
+        x = 99 + int(tmp * np.sin(np.radians(i)))
+        y = 99 + int(tmp* np.cos(np.radians(i)))
+        print(x,y)
         x = min(x, 150)
         y = min(y, 150)
         print(tmp, i, x,y)
@@ -118,7 +118,7 @@ def bres(env, x1,y1,x2,y2):
 
 def main():
     # env = map_env(10, 100)
-    env = rudimentary_map()
+    env = rudimentary_map(10)
     print(env)
     plt.imshow(env, cmap='hot', origin='lower')
 
