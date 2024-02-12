@@ -4,6 +4,7 @@ import mapping
 import time
 import matplotlib.pyplot as plt
 import my_obstacle_avoidance
+import object_detection
 
 def turn_right():
     fc.turn_right(40)
@@ -17,11 +18,11 @@ def turn_left():
 
 def move_forward():
     fc.forward(2)
-    time.sleep(0.02)
+    time.sleep(0.03)
     fc.stop()
 
     fc.forward(2)
-    time.sleep(0.02)
+    time.sleep(0.03)
     fc.stop()
 
 def heuristic(a, b):
@@ -37,11 +38,7 @@ def back_tracking(end_node, path_mapping):
         current = path_mapping[current]
     return path[::-1]
 
-def detect_stop_sign():
-    #TODO: Need to add code on how to recognize stop sign or other trafic signs
-        ## Return True if found a stop sign
-    pass
-    #return True
+
 
 def path_convert(path, start, initial_dir):
     neighborMap = {
@@ -66,17 +63,6 @@ def path_convert(path, start, initial_dir):
         orders.append(required_dir_change)
     return orders
 
-def env_enhancement(env):
-    env_copy = np.copy(env)
-    for x in range(len(env)):
-        for y in range(len(env[0])):
-            down = max(x - 8, 0)
-            left = max(y - 8, 0)
-            right = min(y + 8, len(env[0])-1)
-            up = min(x + 8, len(env)-1)
-            surrounding = env[down:up, left:right]
-            env_copy[x][y] = np.max(surrounding)
-    return env_copy
 
 def a_star_search(env, start, end):
 
@@ -146,7 +132,8 @@ def mark_path(path, env):
     return 
         
 
-def main(env, start=(100, 100), goal=(100, 175), initial_dirction=1, turn_speed=100, move_speed=1):
+def main(env, object_detection, start=(100, 100), goal=(100, 200), initial_dirction=1  ):
+    last_detection = 0
     path = a_star_search(env, start, goal)
     mark_path(path, env)
     if path == False:
@@ -164,28 +151,29 @@ def main(env, start=(100, 100), goal=(100, 175), initial_dirction=1, turn_speed=
                     print("TURNING", order)
                     turn_right()
                 
-        print(path[step])
         step += 1
-        # my_obstacle_avoidance.avoid_collision()
         move_forward()
         
-        ##TODO: implement stop sign functions
-        # if detect_stop_sign():
-        #     fc.stop()
-        #     time.sleep(0.2)
+        if step % 3  == 0  : 
+            category, isDetected = object_detection.run()
+            print(category)
+            current_time = time.time()
+            if isDetected and category == "SIGN" :
+                fc.stop()
+                time.sleep(3)
+            last_detection = time.time()
+         
 
 
 if __name__ == '__main__':
 
     env = mapping.rudimentary_map(1)
-    env = env_enhancement(env)
-    print(env)
-    np.save('env.npy',env)
+    env = mapping.env_enhancement(env)
+
     plt.imshow(env, cmap='hot', origin='lower')
     plt.show()
 
-    try:
-        main(env)
-    finally: 
-        fc.stop()
+    ob = object_detection.ObjectDetection()
+
+    main(env, ob)
 

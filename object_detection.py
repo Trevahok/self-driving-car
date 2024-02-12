@@ -39,7 +39,7 @@ class ObjectDetection:
       category_name = category.category_name
       score = round(category.score, 2)
 
-      if score > 0.05 and category_name in ['traffic light', 'street sign'] :
+      if score > 0.05 and category_name in ['traffic light', 'street sign', 'iPod'] :
         return "SIGN", True
       return category_name, False
 
