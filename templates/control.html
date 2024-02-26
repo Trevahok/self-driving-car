@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SocketIO Flask Connection</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', (event) => {
+            var socket = io.connect('http://' + document.domain + ':8000');
+            
+            socket.on('connect', function() {
+                console.log('Websocket connected!');
+                document.getElementById('status').innerText = 'Connected';
+            });
+
+            socket.on("ultrasound", function(data){
+                document.getElementById('ultrasound-data').innerText = JSON.stringify( data ) 
+            })
+
+            document.getElementById('up').addEventListener('mousedown', function() {
+                socket.emit('up');
+            });
+            document.getElementById('left').addEventListener('mousedown', function() {
+                socket.emit('left');
+            });
+    
+            document.getElementById('right').addEventListener('mousedown', function() {
+                socket.emit('right');
+            });
+       
+            document.getElementById('down').addEventListener('mousedown', function() {
+                socket.emit('down');
+            });
+ 
+        });
+    </script>
+</head>
+<body>
+    <h1>SocketIO Flask Connection</h1>
+    <p id="status">Connecting...</p>
+    <p id="ultrasound-data">Connecting...</p>
+    <div>
+        <button id="up" >Up</button>
+        <button id="left" >Left</button>
+        <button id="right" >Right</button>
+        <button id="down" >Down</button>
+    </div>
+</body>
+</html>
+
