@@ -17,6 +17,10 @@
                 document.getElementById('ultrasound-data').innerText = JSON.stringify( data ) 
             })
 
+            socket.on("grayscale_image", function(data) {
+                drawImageGray(data);
+            });
+
             document.getElementById('up').addEventListener('mousedown', function() {
                 socket.emit('up');
             });
@@ -31,6 +35,19 @@
             document.getElementById('down').addEventListener('mousedown', function() {
                 socket.emit('down');
             });
+
+            function drawImageGray(imageData) {
+                const canvas = document.getElementById('imageCanvas');
+                const ctx = canvas.getContext('2d');
+
+                for (let x = 0; x < imageData.length; x++) {
+                    for (let y = 0; y < imageData[x].length; y++) {
+                        const intensity = imageData[x][y];
+                        ctx.fillStyle = `rgb(${intensity}, ${intensity}, ${intensity})`;
+                        ctx.fillRect(x, y, 1, 1);
+                    }
+                }
+            }
  
         });
     </script>
@@ -44,6 +61,9 @@
         <button id="left" >Left</button>
         <button id="right" >Right</button>
         <button id="down" >Down</button>
+    </div>
+    <div>
+        <canvas id="imageCanvas" width="5" height="5"></canvas>
     </div>
 </body>
 </html>
