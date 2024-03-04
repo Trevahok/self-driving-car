@@ -31,27 +31,12 @@ def emit_ultrasound():
     while True: 
         dist = us_map()
         gs = fc.get_grayscale_list()
-        socketio.emit('ultrasound', {'us': dist, 'gs': gs } )
-
-def send_grayscale_pic(gray_scale_img = None):
-    gray_scale_img_sample = [
-        [120, 130, 140, 150, 160],
-        [170, 180, 190, 200, 210],
-        [220, 230, 240, 250, 60],
-        [70, 80, 90, 100, 110],
-        [10, 20, 30, 40, 50]
-    ]
-
-    if gray_scale_img:
-        socketio.emit('grayscale_img', gray_scale_img)
-    else:
-        socketio.emit('grayscale_img', gray_scale_img_sample)
+        socketio.emit('data', {'us': dist, 'gs': gs } )
 
 @socketio.on('connect')
 def handle_connected(data):
     print('connected to socket: ' + str(data))
     socketio.start_background_task(target=emit_ultrasound)
-    send_grayscale_pic()
 
 
 @socketio.on('up')

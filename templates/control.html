@@ -1,70 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>SocketIO Flask Connection</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link href=" https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/cerulean/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', (event) => {
             var socket = io.connect('http://' + document.domain + ':8000');
-            
-            socket.on('connect', function() {
+
+            socket.on('connect', function () {
                 console.log('Websocket connected!');
                 document.getElementById('status').innerText = 'Connected';
             });
 
-            socket.on("ultrasound", function(data){
-                document.getElementById('ultrasound-data').innerText = JSON.stringify( data ) 
+            socket.on("data", function (data) {
+                document.getElementById('ultrasound-data').innerText = JSON.stringify(data)
+                drawImageGray(data.gs)
+                drawUltrasound(data.us)
             })
 
-            socket.on("grayscale_image", function(data) {
-                drawImageGray(data);
-            });
-
-            document.getElementById('up').addEventListener('mousedown', function() {
+            document.getElementById('up').addEventListener('mousedown', function () {
                 socket.emit('up');
             });
-            document.getElementById('left').addEventListener('mousedown', function() {
+            document.getElementById('left').addEventListener('mousedown', function () {
                 socket.emit('left');
             });
-    
-            document.getElementById('right').addEventListener('mousedown', function() {
+
+            document.getElementById('right').addEventListener('mousedown', function () {
                 socket.emit('right');
             });
-       
-            document.getElementById('down').addEventListener('mousedown', function() {
+
+            document.getElementById('down').addEventListener('mousedown', function () {
                 socket.emit('down');
             });
 
             function drawImageGray(imageData) {
                 const canvas = document.getElementById('imageCanvas');
+                canvas.height = 1;
+                canvas.width = 3;
+
                 const ctx = canvas.getContext('2d');
 
-                for (let x = 0; x < imageData.length; x++) {
-                    for (let y = 0; y < imageData[x].length; y++) {
-                        const intensity = imageData[x][y];
-                        ctx.fillStyle = `rgb(${intensity}, ${intensity}, ${intensity})`;
-                        ctx.fillRect(x, y, 1, 1);
-                    }
+                const width = canvas.width;
+                const height = canvas.height;
+                const stripeWidth = width / 3;
+
+                // Draw the green stripe
+                for (var i = 0; i < 3; i++) {
+                    ctx.fillStyle = `rgb(${imageData[i]}, ${imageData[i]}, ${imageData[i]})`;
+                    ctx.fillRect(stripeWidth * i, 0, stripeWidth, height);
                 }
+
             }
- 
+            function drawUltrasound(data){
+                console.log(data)
+
+                const canvas = document.getElementById('radarCanvas');
+                const ctx = canvas.getContext('2d');
+
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                const radius = Math.min(centerX, centerY) * 0.9;
+
+                const startAngle = -Math.PI;
+                const endAngle = 0;
+
+                const numPoints = data.length;
+
+                const angleIncrement = (endAngle - startAngle) / numPoints;
+                function drawRadarPlot() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    // Draw axes
+                    ctx.beginPath();
+                    for (let i = 0; i < numPoints; i++) {
+                        const angle = startAngle + angleIncrement * i;
+                        const x = centerX + Math.cos(angle) * radius;
+                        const y = centerY + Math.sin(angle) * radius;
+                        ctx.moveTo(centerX, centerY);
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.strokeStyle = 'black';
+                    ctx.stroke();
+
+                    // Draw data points
+                    ctx.fillStyle = 'red';
+                    for (let i = 0; i < numPoints; i++) {
+                        const angle = startAngle + angleIncrement * i;
+                        const value = data[i];
+                        if (value >= 0) {
+                            const normalizedValue = value / 100; // normalize to fit within radius
+                            const x = centerX + Math.cos(angle) * radius * normalizedValue;
+                            const y = centerY + Math.sin(angle) * radius * normalizedValue;
+                            ctx.beginPath();
+                            ctx.arc(x, y, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+
+
+                }
+                
+                drawRadarPlot()
+            }
+
+
         });
     </script>
 </head>
+
 <body>
     <h1>SocketIO Flask Connection</h1>
     <p id="status">Connecting...</p>
     <p id="ultrasound-data">Connecting...</p>
-    <div>
-        <button id="up" >Up</button>
-        <button id="left" >Left</button>
-        <button id="right" >Right</button>
-        <button id="down" >Down</button>
+
+    <div class="jumbotron">
+
+        <div class="container">
+            <div class="row">
+                <div class="gamepad" style="display: flex; justify-content: left; align-items: center; height: 200px;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <button id="left"
+                            style="width: 50px; height: 50px; border: 2px solid black; border-radius: 50%; background-color: lightgray; cursor: pointer; transform: rotate(0deg);"> < </button>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <button id="up"
+                            style="width: 50px; height: 50px; border: 2px solid black; border-radius: 50%; background-color: lightgray; cursor: pointer; transform: rotate(0deg);">^</button>
+                        <div style="height: 20px;"></div> <!-- Spacer -->
+                        <button id="down"
+                            style="width: 50px; height: 50px; border: 2px solid black; border-radius: 50%; background-color: lightgray; cursor: pointer; transform: rotate(0deg);">v</button>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <button id="right"
+                            style="width: 50px; height: 50px; border: 2px solid black; border-radius: 50%; background-color: lightgray; cursor: pointer; transform: rotate(0deg);">></button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <canvas id="imageCanvas" width="3" height="1"></canvas>
+                <canvas id="radarCanvas" width="400" height="400"></canvas>
+            </div>
+        </div>
+
     </div>
+
+
     <div>
-        <canvas id="imageCanvas" width="5" height="5"></canvas>
     </div>
 </body>
-</html>
 
+</html>
