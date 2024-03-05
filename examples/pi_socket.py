@@ -4,24 +4,9 @@ from collections import deque
 import signal
 import time
 import json 
-import picar_4wd as fc
+import picar_4wd as fc 
 
-def get_distance_at_with_limit(angle, limit = 1000):
-    ''' if distance is greater than limit, it returns limit'''
-    dist = fc.get_distance_at(angle)
-    if dist > limit: 
-        return - 2 
-    return dist
-
-def us_map():
-    l = []
-    for i in range(-60, 61, 10):
-        tmp = get_distance_at_with_limit(i, 150)
-        l.append(tmp)
-    return l
-
-
-server_addr = 'D8:3A:DD:9E:F3:59'
+server_addr = 'E4:5F:01:FC:E6:FA'
 server_port = 1
 
 buf_size = 1024
@@ -90,8 +75,24 @@ def start_client():
             output += data
             output_split = output.split("\r\n")
             for i in range(len(output_split) - 1):
-                print(output_split[i])
+                tc = str(output_split[i])
+                print(tc)
+                if(tc == "F"):
+                    print("Move Forward")
+                    fc.move_forward()
+                elif(tc == "B"):
+                    print("Move Backward")
+                    fc.move_backward()
+                elif(tc == "L"):
+                    print("Move Left")
+                    fc.left()
+                elif(tc == "R"):
+                    print("Move Right")
+                    fc.right()
+                else:
+                    continue
             output = output_split[-1]
+            
             output_lock.release()
     server_sock.close()
     sock.close()
@@ -106,8 +107,8 @@ j = 0
 while not exit_event.is_set():
     dq_lock.acquire()
     cpu_temp = 20
-    ultrasound = us_map()
-    grayscale = [1 , 3, 4]
+    ultrasound = 12
+    grayscale = [1,2,3]
     message_queue.append(str(ultrasound) + str(cpu_temp) + str(grayscale) + " \r\n")
     dq_lock.release()
     j += 1

@@ -3,8 +3,9 @@ import threading
 from collections import deque
 import signal
 import time
+import picar_4wd as fc 
 
-server_addr = 'D8:3A:DD:9E:F3:59'
+server_addr = 'E4:5F:01:FC:E6:FA'
 server_port = 1
 
 buf_size = 1024
